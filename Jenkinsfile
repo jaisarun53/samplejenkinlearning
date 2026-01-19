@@ -5,6 +5,7 @@ pipeline {
         stage('compile') {
             steps {
                 echo 'Hello World'
+ 		sh 'mvn clean package'
             }
         }
 
