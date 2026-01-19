@@ -8,7 +8,11 @@ pipeline {
  		sh 'mvn clean package'
             }
         }
-
+post {
+success {
+echo 'archiveArtifacts artifacts: '**/*.war', followSymlinks: false'
+}
+}
         stage('unitest') {
             steps {
                 echo 'Hello'
