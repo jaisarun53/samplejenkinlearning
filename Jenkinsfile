@@ -5,14 +5,15 @@ pipeline {
         stage('compile') {
             steps {
                 echo 'Hello World'
- 		sh 'mvn clean package'
+                sh 'mvn clean package'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/*.war', followSymlinks: false
+                }
             }
         }
-post {
-success {
-echo 'archiveArtifacts artifacts: '**/*.war', followSymlinks: false'
-}
-}
+
         stage('unitest') {
             steps {
                 echo 'Hello'
