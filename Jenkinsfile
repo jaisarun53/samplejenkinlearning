@@ -20,6 +20,12 @@ pipeline {
 		sh 'docker build -t myregistry.local/myapp:"$BUILD_NUMBER" .'
             }
         }
+	stage('trivy scan docker image') {
+            steps {
+                echo 'scanning docker image'
+                sh 'trivy image myregistry.local/myapp:"$BUILD_NUMBER" '
+            }
+        }
     }
 }
 
