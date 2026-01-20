@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-        stage('compile') {
+        stage('Compile') {
             steps {
                 echo 'Hello World'
                 sh 'mvn clean package'
@@ -14,9 +14,10 @@ pipeline {
             }
         }
 
-        stage('unitest') {
+        stage('Build docker image') {
             steps {
-                echo 'Hello'
+                echo 'building docker image'
+		sh 'docker build -t myregistry.local/myapp:"$BUILD_NUMBER" .'
             }
         }
     }
