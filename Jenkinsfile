@@ -1,92 +1,60 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_USER = "arunjaiswal53"
-        IMAGE_NAME = "myapp"
-        IMAGE_TAG = "${BUILD_NUMBER}"
-        CONTAINER_NAME = "myapp"
-        TOMCAT_PORT = "8082"
-        HOST_PORT = "8082"
-    }
-
     stages {
-
-        stage('Build WAR') {
+        stage('Compile') {
             steps {
-                echo 'Building the WAR file using Maven'
+                echo 'Hello World'
                 sh 'mvn clean package'
             }
-            post {
-                success {
-                    archiveArtifacts artifacts: '**/*.war', followSymlinks: false
-                }
+        
+       post { 
+        success { 
+            echo 'Archiving the artifact'
+            archiveArtifacts artifacts: '**/*.war', followSymlinks: false
+        }
+    }
+}
+        stage('Build docker image') {
+            steps {
+                echo 'building docker image'
+                sh 'docker build -t myregistry.local/myapp:"$BUILD_NUMBER" .'
             }
         }
-
-        stage('Build Docker Image') {
+        stage('trivy scan docker image') {
             steps {
-                echo 'Building Docker image from Dockerfile'
-                sh """
-                   docker build -t $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG .
-                """
+                echo 'scanning image'
+                sh 'trivy image myregistry.local/myapp:"$BUILD_NUMBER"'
             }
         }
-
-        stage('Trivy Scan Docker Image') {
+       
+        stage('Upload image to docker registry') {
             steps {
-                echo 'Scanning Docker image for vulnerabilities'
-                sh """
-                   trivy image $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
-                """
+                echo 'Uploading img'
             }
         }
-
-        stage('DockerHub Login') {
+        stage('deploy to staging env') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                }
+                echo 'staging env'
+                sh '''
+                docker stop myapp-staging || true
+                docker rm  myapp-staging  || true
+                docker run -d --name myapp-staging -p 9090:8080  myregistry.local/myapp:"$BUILD_NUMBER"
+                  '''
             }
         }
-
-        stage('Push Image to Docker Hub') {
+        stage('deploy to prod env') {
             steps {
-                echo 'Pushing Docker image to Docker Hub'
-                sh """
-                   docker push $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
-                """
-            }
-        }
-
-        stage('Pull Image for Deployment') {
-            steps {
-                echo 'Pulling the Docker image from Docker Hub'
-                sh """
-                   docker pull $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
-                """
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                echo 'Deploying Tomcat container with WAR'
-                sh """
-                   # Stop and remove old container if it exists
-                   docker rm -f $CONTAINER_NAME || true
-
-                   # Run new container
-                   docker run -d \
-                     --name $CONTAINER_NAME \
-                     -p $HOST_PORT:$TOMCAT_PORT \
-                     $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
-                """
+                 timeout(time:1, unit:'MINUTES'){
+                 input message: 'Approve Production deployment?'
+                 }
+                echo 'prod deployment'
+                sh '''
+                docker stop myapp-production || true
+                docker rm  myapp-production  || true
+                docker run -d --name myapp-production -p 9091:8080  myregistry.local/myapp:"$BUILD_NUMBER"
+                  '''
             }
         }
     }
 }
-
