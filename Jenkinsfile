@@ -7,7 +7,7 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         CONTAINER_NAME = "myapp"
         TOMCAT_PORT = "8082"
-        HOST_PORT = "8071"
+        HOST_PORT = "8082"
     }
 
     stages {
