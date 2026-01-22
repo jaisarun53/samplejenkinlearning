@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = "arunjaiswal53"
-        IMAGE_NAME = "myapp"
-        IMAGE_TAG = "${BUILD_NUMBER}"
-        LOCAL_IMAGE = "myregistry.local/myapp:${BUILD_NUMBER}"
-        REMOTE_IMAGE = "arunjaiswal53/myapp:${BUILD_NUMBER}"
+        IMAGE_NAME     = "myapp"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        LOCAL_IMAGE    = "myregistry.local/myapp:${BUILD_NUMBER}"
+        REMOTE_IMAGE   = "arunjaiswal53/myapp:${BUILD_NUMBER}"
     }
 
     stages {
@@ -94,6 +94,7 @@ pipeline {
                 timeout(time: 1, unit: 'MINUTES') {
                     input message: 'Approve Production deployment?'
                 }
+
                 echo 'Deploying to production environment'
                 sh '''
                   docker stop myapp-production || true
@@ -107,39 +108,40 @@ pipeline {
             }
         }
     }
-	post { 
-        always { 
-        	mail to:'jarun4729@gmail.com',
-		subject:"BUILD COMPLETED",
-		body: "Please go to &{BUILD_URL} and verify the build"
+
+    post {
+        always {
+            mail to: 'jarun4729@gmail.com',
+                 subject: 'BUILD COMPLETED',
+                 body: "Please go to ${BUILD_URL} and verify the build"
         }
-    }
-	 post {
-        success{
-            mail bcc: '', body: """Hi Team,
 
-Build #$BUILD_NUMBER is successful, please go through the url
+        success {
+            mail to: 'jarun4729@gmail.com',
+                 subject: 'BUILD SUCCESS NOTIFICATION',
+                 body: """Hi Team,
 
-$BUILD_URL
+Build #${BUILD_NUMBER} is successful.
 
-and verify the details.
+URL:
+${BUILD_URL}
 
 Regards,
-DevOps Team""", cc: '', from: '', replyTo: '', subject: 'BUILD SUCCESS NOTIFICATION', to: 'jarun4729@gmail.com'
+DevOps Team"""
         }
-    }
-	 post {
+
         failure {
-            mail bcc: '', body: """Hi Team,
-            
-Build #$BUILD_NUMBER is unsuccessful, please go through the url
+            mail to: 'jarun4729@gmail.com',
+                 subject: 'BUILD FAILED NOTIFICATION',
+                 body: """Hi Team,
 
-$BUILD_URL
+Build #${BUILD_NUMBER} has failed.
 
-and verify the details.
+URL:
+${BUILD_URL}
 
 Regards,
-DevOps Team""", cc: '', from: '', replyTo: '', subject: 'BUILD FAILED NOTIFICATION', to: 'jarun4729@gmail.com'
+DevOps Team"""
         }
     }
 }
