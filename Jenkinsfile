@@ -109,17 +109,37 @@ pipeline {
     }
 	post { 
         always { 
-            echo 'build completd, now clearing the workspace'
+        	mail to:'jarun4729@gmail.com',
+		subject:"BUILD COMPLETED",
+		body: "Please go to &{BUILD_URL} and verify the build"
         }
     }
 	 post {
         success{
-            echo 'build successful'
+            mail bcc: '', body: """Hi Team,
+
+Build #$BUILD_NUMBER is successful, please go through the url
+
+$BUILD_URL
+
+and verify the details.
+
+Regards,
+DevOps Team""", cc: '', from: '', replyTo: '', subject: 'BUILD SUCCESS NOTIFICATION', to: 'jarun4729@gmail.com'
         }
     }
 	 post {
         failure {
-            echo 'Build failed'
+            mail bcc: '', body: """Hi Team,
+            
+Build #$BUILD_NUMBER is unsuccessful, please go through the url
+
+$BUILD_URL
+
+and verify the details.
+
+Regards,
+DevOps Team""", cc: '', from: '', replyTo: '', subject: 'BUILD FAILED NOTIFICATION', to: 'jarun4729@gmail.com'
         }
     }
 }
