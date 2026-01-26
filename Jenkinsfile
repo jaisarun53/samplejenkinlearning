@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent 'ubuntu-node-for-javaapp'
 
     environment {
         DOCKERHUB_USER = "arunjaiswal53"
